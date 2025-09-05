@@ -1,14 +1,11 @@
 import streamlit as st
 import openai
 
-# ---------------------------
-# STEP 1: Set your OpenAI API key
-# ---------------------------
-openai.api_key = "YOUR_OPENAI_API_KEY"  # <- Replace this with your actual key
+# --- Set your OpenAI API key here ---
+# It's safer to use Streamlit secrets or environment variables
+openai.api_key = "YOUR_OPENAI_API_KEY_HERE"
 
-# ---------------------------
-# STEP 2: Function to get response from OpenAI
-# ---------------------------
+# --- Function to get response from OpenAI ---
 def get_openai_response(prompt):
     try:
         response = openai.ChatCompletion.create(
@@ -18,36 +15,17 @@ def get_openai_response(prompt):
         return response.choices[0].message['content']
     except openai.error.AuthenticationError:
         return "Authentication Error: Check your API key!"
+    except openai.error.APIError as e:
+        return f"OpenAI API Error: {e}"
     except Exception as e:
-        return f"An error occurred: {str(e)}"
+        return f"Unexpected Error: {e}"
 
-# ---------------------------
-# STEP 3: Streamlit UI
-# ---------------------------
-st.set_page_config(page_title="SmartStudy AI Chatbot", page_icon="🤖")
+# --- Streamlit UI ---
 st.title("SmartStudy AI Chatbot")
 
-# Initialize session state to store chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# User input
-user_input = st.text_input("You:", key="input")
+user_input = st.text_input("Enter your message:")
 
 if st.button("Send"):
     if user_input:
-        # Add user message to chat history
-        st.session_state.messages.append({"role": "user", "content": user_input})
-
-        # Get AI response
         reply = get_openai_response(user_input)
-
-        # Add AI response to chat history
-        st.session_state.messages.append({"role": "assistant", "content": reply})
-
-# Display chat history
-for msg in st.session_state.messages:
-    if msg["role"] == "user":
-        st.markdown(f"**You:** {msg['content']}")
-    else:
-        st.markdown(f"**AI:** {msg['content']}")
+        st.text_area("ChatGPT Reply:", value=reply, height=200)
